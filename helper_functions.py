@@ -113,7 +113,58 @@ def local_alignment(seq1, seq2, scoring_function):
     Other alignments are not possible.
 
     """
-    raise NotImplementedError()
+    blosum62 = substitution_matrices.load("BLOSUM62")
+    n = len(seq1)
+    m = len(seq2)
+    gap_penalty = -4
+
+    score_matrix = np.zeros((n + 1, m + 1))
+    max_score = 0
+    max_pos = (0, 0)
+
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            pair = (seq1[i-1],seq2[j-1])
+            match_score = score_matrix[i-1][j-1] + blosum62.get(pair, blosum62.get((pair[1], pair[0]), -4))
+            delete_score = score_matrix[i-1][j] + gap_penalty
+            insert_score = score_matrix[i][j-1] + gap_penalty
+
+            score = max(0, match_score, delete_score, insert_score)
+            score_matrix[i][j] = score
+
+            if score > max_score:
+                max_score = score
+                max_pos = (i, j)
+
+    i, j = max_pos
+    align1 = []
+    align2 = []
+
+    while i > 0 and j > 0 and score_matrix[i][j] > 0:
+        current_score = score_matrix[i][j]
+
+        pair = (seq1[i-1], seq2[j-1])
+        m_score = blosum62.get(pair, blosum62.get((pair[1], pair[0]), -4))
+        if abs(current_score - (score_matrix[i-1][j-1] + m_score)) < 1e-5:
+            align1.append(seq1[i-1])
+            align2.append(seq2[j-1])
+            i -= 1
+            j -= 1
+            continue
+
+        if abs(current_score - (score_matrix[i-1][j] + gap_penalty)) < 1e-5:
+            align1.append(seq1[i-1])
+            align2.append("-")
+            i -= 1
+        else:
+            align1.append("-")
+            align2.append(seq2[j-1])
+            j -= 1
+
+    final_align1 = "".join(reversed(align1))
+    final_align2 = "".join(reversed(align2))
+
+    return final_align1, final_align2, max_score
 
 
 ## This is an example scoring function, you should implement a version which uses a scoring matrix 
