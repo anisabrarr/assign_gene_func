@@ -26,7 +26,7 @@ def global_alignment(seq1, seq2, scoring_function):
     """
     n = len(seq1)
     m = len(seq2)
-    gap_penalty = -1
+    gap_penalty = -4
 
     score_matrix = np.zeros((n + 1, m + 1))
     for i in range(n + 1):
@@ -98,7 +98,7 @@ def local_alignment(seq1, seq2, scoring_function):
     """
     n = len(seq1)
     m = len(seq2)
-    gap_penalty = -1
+    gap_penalty = -4
 
     score_matrix = np.zeros((n + 1, m + 1))
     max_score = 0
